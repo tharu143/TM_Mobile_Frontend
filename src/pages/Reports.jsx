@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from "react";
-import axios from "axios";
+import apiClient from "../config/api";
 
 // Inline SVG Icons
 const BarChart3 = () => (
@@ -83,9 +83,9 @@ const Reports = ({ theme }) => {
     try {
       setLoading(true);
       const [salesResponse, printResponse, productsResponse] = await Promise.all([
-        axios.get("http://localhost:5000/api/sales"),
-        axios.get("http://localhost:5000/api/print"),
-        axios.get("http://localhost:5000/api/products")
+        apiClient.get("/api/sales"),
+        apiClient.get("/api/print"),
+        apiClient.get("/api/products")
       ]);
       setSalesData(salesResponse.data);
       setProductsData(productsResponse.data);
@@ -178,12 +178,12 @@ const Reports = ({ theme }) => {
   };
 
   const fetchMonthlyStock = async (year, month) => {
-    const response = await axios.get(`http://localhost:5000/api/reports/monthly?year=${year}&month=${month}`);
+    const response = await apiClient.get(`/api/reports/monthly?year=${year}&month=${month}`);
     return response.data;
   };
 
   const fetchYearlyStock = async (year) => {
-    const response = await axios.get(`http://localhost:5000/api/reports/yearly?year=${year}`);
+    const response = await apiClient.get(`/api/reports/yearly?year=${year}`);
     return response.data;
   };
 

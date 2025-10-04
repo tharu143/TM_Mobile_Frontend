@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import axios from "axios";
+import apiClient from "../config/api";
 import { SaveIcon, XIcon } from "lucide-react";
 
 const SettingsPage = () => {
@@ -17,8 +17,8 @@ const SettingsPage = () => {
     const fetchSettings = async () => {
       try {
         const [settingsResponse, printResponse] = await Promise.all([
-          axios.get("http://localhost:5000/api/settings"),
-          axios.get("http://localhost:5000/api/print")
+          apiClient.get("/api/settings"),
+          apiClient.get("/api/print")
         ]);
 
         setGstPercentage(settingsResponse.data.gstPercentage || "");
@@ -42,7 +42,7 @@ const SettingsPage = () => {
     setSuccess(null);
 
     try {
-      const response = await axios.post("http://localhost:5000/api/settings", {
+      const response = await apiClient.post("/api/settings", {
         gstPercentage: parseFloat(gstPercentage) || 0,
         enableGst: enableGst,
       });
@@ -65,7 +65,7 @@ const SettingsPage = () => {
     setSuccess(null);
 
     try {
-      const response = await axios.post("http://localhost:5000/api/print", {
+      const response = await apiClient.post("/api/print", {
         shopName,
         address,
         gstin
