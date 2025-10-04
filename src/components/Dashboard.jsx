@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import axios from "axios";
+import apiClient from "../config/api";
 import { DollarSign, Users, AlertTriangle, TrendingUp, ShoppingCart, Eye, Phone } from "lucide-react";
 import Chart from 'chart.js/auto';
 
@@ -30,10 +30,10 @@ const Dashboard = ({ theme }) => {
     try {
       setLoading(true);
 
-      const statsResponse = await axios.get("http://localhost:5000/api/dashboard/stats");
+      const statsResponse = await apiClient.get("/api/dashboard/stats");
       setStats(statsResponse.data);
 
-      const salesResponse = await axios.get("http://localhost:5000/api/sales");
+      const salesResponse = await apiClient.get("/api/sales");
       setAllSales(salesResponse.data);
       const today = new Date().toISOString().split("T")[0];
       const todaySales = salesResponse.data.filter((sale) => {
@@ -43,7 +43,7 @@ const Dashboard = ({ theme }) => {
       setAllTodaySales(todaySales);
       setRecentSales(todaySales.slice(0, 3));
 
-      const lowStockResponse = await axios.get("http://localhost:5000/api/dashboard/low-stock");
+      const lowStockResponse = await apiClient.get("/api/dashboard/low-stock");
       setLowStockItems(lowStockResponse.data);
 
       const initialStockInputs = {};
@@ -55,7 +55,7 @@ const Dashboard = ({ theme }) => {
       setStockInputs(initialStockInputs);
       setMinStockInputs(initialMinStockInputs);
 
-      const customersResponse = await axios.get("http://localhost:5000/api/customers");
+      const customersResponse = await apiClient.get("/api/customers");
       setStats((prevStats) => ({
         ...prevStats,
         totalCustomers: customersResponse.data.length,
@@ -276,7 +276,7 @@ const Dashboard = ({ theme }) => {
         return;
       }
 
-      const response = await axios.post("http://localhost:5000/api/dashboard/restock-manual", { items: restockData });
+      const response = await apiClient.post("/api/dashboard/restock-manual", { items: restockData });
       alert(response.data.message);
       fetchDashboardData();
     } catch (err) {
@@ -287,7 +287,7 @@ const Dashboard = ({ theme }) => {
 
   const handleAutoRestock = async () => {
     try {
-      const response = await axios.post("http://localhost:5000/api/dashboard/restock");
+      const response = await apiClient.post("/api/dashboard/restock");
       alert(response.data.message);
       fetchDashboardData();
     } catch (err) {
