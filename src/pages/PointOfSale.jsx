@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import axios from "axios";
+import apiClient from "../config/api";
 
 // Inline SVG Icons
 const SearchIcon = () => (
@@ -91,11 +91,11 @@ const PointOfSale = ({ theme }) => {
       try {
         setLoading(true);
         const [productsRes, mobilesRes, accessoriesRes, settingsRes, printRes] = await Promise.all([
-          axios.get("http://localhost:5000/api/products"),
-          axios.get("http://localhost:5000/api/mobiles"),
-          axios.get("http://localhost:5000/api/accessories"),
-          axios.get("http://localhost:5000/api/settings"),
-          axios.get("http://localhost:5000/api/print"),
+          apiClient.get("/api/products"),
+          apiClient.get("/api/mobiles"),
+          apiClient.get("/api/accessories"),
+          apiClient.get("/api/settings"),
+          apiClient.get("/api/print"),
         ]);
 
         setProducts(productsRes.data);
@@ -123,7 +123,7 @@ const PointOfSale = ({ theme }) => {
     const fetchCustomerSuggestions = async () => {
       if (customerName.trim() || customerPhone.trim()) {
         try {
-          const response = await axios.get("http://localhost:5000/api/customers/search", {
+          const response = await apiClient.get("/api/customers/search", {
             params: { query: customerName || customerPhone },
           });
           setCustomerSuggestions(response.data);
@@ -246,7 +246,7 @@ const PointOfSale = ({ theme }) => {
     };
 
     try {
-      await axios.post("http://localhost:5000/api/sales", saleData);
+      await apiClient.post("/api/sales", saleData);
       setProducts((prevProducts) =>
         prevProducts.map((product) => {
           const cartItem = cart.find((item) => item.id === product._id);
