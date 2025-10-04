@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { Search, PackagePlus, Edit, Trash2, Package, AlertTriangle, X, FileSpreadsheet, FileUp } from "lucide-react";
-import axios from "axios";
+import apiClient from "../config/api";
 
 // Custom Confirmation Modal Component
 const ConfirmModal = ({ message, onConfirm, onCancel, theme }) => {
@@ -265,7 +265,7 @@ const InventoryManagement = ({ theme }) => {
   const fetchProducts = async () => {
     try {
       setLoading(true);
-      const response = await axios.get("http://localhost:5000/api/products");
+      const response = await apiClient.get("/api/products");
       setProducts(response.data);
       setLoading(false);
     } catch (error) {
@@ -277,7 +277,7 @@ const InventoryManagement = ({ theme }) => {
 
   const fetchMobiles = async () => {
     try {
-      const response = await axios.get("http://localhost:5000/api/mobiles");
+      const response = await apiClient.get("/api/mobiles");
       setMobiles(response.data);
     } catch (error) {
       console.error("Error fetching mobiles:", error);
@@ -286,7 +286,7 @@ const InventoryManagement = ({ theme }) => {
 
   const fetchAccessories = async () => {
     try {
-      const response = await axios.get("http://localhost:5000/api/accessories");
+      const response = await apiClient.get("/api/accessories");
       setAccessories(response.data);
     } catch (error) {
       console.error("Error fetching accessories:", error);
@@ -536,7 +536,7 @@ const InventoryManagement = ({ theme }) => {
   const deleteProduct = (id) => {
     showConfirmation("Are you sure you want to delete this product?", async () => {
       try {
-        await axios.delete(`http://localhost:5000/api/products/${id}`);
+        await apiClient.delete(`/api/products/${id}`);
         setProducts(products.filter((product) => product._id !== id));
         showAlert("Product deleted successfully!");
       } catch (error) {
@@ -551,7 +551,7 @@ const InventoryManagement = ({ theme }) => {
   const deleteMobile = (id) => {
     showConfirmation("Are you sure you want to delete this mobile type? This will not remove products using this type.", async () => {
       try {
-        await axios.delete(`http://localhost:5000/api/mobiles/${id}`);
+        await apiClient.delete(`/api/mobiles/${id}`);
         setMobiles(mobiles.filter((mobile) => mobile._id !== id));
         showAlert("Mobile type deleted successfully!");
       } catch (error) {
@@ -566,7 +566,7 @@ const InventoryManagement = ({ theme }) => {
   const deleteAccessory = (id) => {
     showConfirmation("Are you sure you want to delete this accessory type? This will not remove products using this type.", async () => {
       try {
-        await axios.delete(`http://localhost:5000/api/accessories/${id}`);
+        await apiClient.delete(`/api/accessories/${id}`);
         setAccessories(accessories.filter((accessory) => accessory._id !== id));
         showAlert("Accessory type deleted successfully!");
       } catch (error) {
@@ -580,7 +580,7 @@ const InventoryManagement = ({ theme }) => {
 
   const updateStock = async (id, newStock) => {
     try {
-      await axios.put(`http://localhost:5000/api/products/${id}/stock`, { stock: Number(newStock) });
+      await apiClient.put(`/api/products/${id}/stock`, { stock: Number(newStock) });
       setProducts(
         products.map((product) => (product._id === id ? { ...product, stock: newStock } : product))
       );
@@ -620,7 +620,7 @@ const InventoryManagement = ({ theme }) => {
 
   const handleExportMobiles = async () => {
     try {
-      const response = await axios.get("http://localhost:5000/api/export/mobiles", {
+      const response = await apiClient.get("/api/export/mobiles", {
         responseType: "blob",
       });
       const url = window.URL.createObjectURL(new Blob([response.data]));
@@ -640,7 +640,7 @@ const InventoryManagement = ({ theme }) => {
 
   const handleExportAccessories = async () => {
     try {
-      const response = await axios.get("http://localhost:5000/api/export/accessories", {
+      const response = await apiClient.get("/api/export/accessories", {
         responseType: "blob",
       });
       const url = window.URL.createObjectURL(new Blob([response.data]));
@@ -665,7 +665,7 @@ const InventoryManagement = ({ theme }) => {
     formData.append("file", file);
     try {
       setLoading(true);
-      const response = await axios.post("http://localhost:5000/api/import/products", formData, {
+      const response = await apiClient.post("/api/import/products", formData, {
         headers: { "Content-Type": "multipart/form-data" },
       });
       showAlert(response.data.message);
