@@ -1,8 +1,9 @@
-// Reports.jsx (Modified to show deleted services in reports if status is 'completed-paid'; fetches all services, filters by status only)
+// Reports.jsx (Modified to include individual service printing)
 import { useState, useEffect } from "react";
 import axios from "axios";
 import apiClient, { API_BASE_URL } from "../config/api";
 import { BarChart3, Download, TrendingUp, DollarSign, Printer, RefreshCw, Sun, Moon, Leaf, Grid } from "lucide-react";
+
 // Inline SVG Icons
 const BarChart3Icon = () => (
   <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -11,6 +12,7 @@ const BarChart3Icon = () => (
     <line x1="6" y1="20" x2="6" y2="16"></line>
   </svg>
 );
+
 const Reports = ({ theme, setTheme }) => {
   const themes = {
     light: {
@@ -130,6 +132,7 @@ const Reports = ({ theme, setTheme }) => {
       successForeground: '#14532d',
     },
   };
+
   const styles = themes[theme] || themes.light;
   const [selectedReport, setSelectedReport] = useState("sales");
   const [dateFrom, setDateFrom] = useState("");
@@ -160,6 +163,7 @@ const Reports = ({ theme, setTheme }) => {
   const [showThemeDropdown, setShowThemeDropdown] = useState(false);
   const [reportMessage, setReportMessage] = useState("");
   const [servicesData, setServicesData] = useState([]);
+
   const itemsPerPage = 10;
   const currentYear = new Date().getFullYear();
   const years = Array.from({ length: currentYear - 1999 }, (_, i) => currentYear - i);
@@ -167,6 +171,7 @@ const Reports = ({ theme, setTheme }) => {
     "January", "February", "March", "April", "May", "June",
     "July", "August", "September", "October", "November", "December"
   ];
+
   const fetchData = async () => {
     try {
       setLoading(true);
@@ -176,9 +181,11 @@ const Reports = ({ theme, setTheme }) => {
         apiClient.get("/api/products"),
         apiClient.get("/api/services")
       ]);
+
       setSalesData(salesResponse.data);
       setProductsData(productsResponse.data);
       setServicesData(servicesResponse.data);
+
       setShopDetails({
         shopName: printResponse.data.shopName || "Mobile Shop",
         address: printResponse.data.address || "143 Shop Street, City, Country",
@@ -197,14 +204,16 @@ const Reports = ({ theme, setTheme }) => {
       console.error("Error fetching data:", err);
     }
   };
+
   useEffect(() => {
     fetchData();
   }, []);
+
   const filteredSalesData = salesData
     .filter((sale) => {
       const saleDate = sale.timestamp.slice(0, 10);
       const saleTime = sale.timestamp.slice(11, 16);
-     
+      
       if (dateFrom && saleDate < dateFrom) return false;
       if (dateTo && saleDate > dateTo) return false;
       if (timeFrom && saleTime < timeFrom) return false;
@@ -225,7 +234,10 @@ const Reports = ({ theme, setTheme }) => {
       if (timeDiff !== 0) return timeDiff;
       return b._id.localeCompare(a._id);
     });
-  const filteredPaidServices = servicesData.filter(service => service.status === 'completed-paid');
+
+  const filteredPaidServices = servicesData.filter(service => service.status === 'completed-paid' || service.isDeleted);
+
+
   const getSalesStats = () => {
     const totalSales = filteredSalesData.reduce((sum, sale) => sum + (sale.manualTotal || sale.total), 0);
     const totalTransactions = filteredSalesData.length;
@@ -241,6 +253,7 @@ const Reports = ({ theme, setTheme }) => {
       todaySales,
     };
   };
+
   const getTopProducts = () => {
     const productSales = {};
     filteredSalesData.forEach((sale) => {
@@ -256,6 +269,7 @@ const Reports = ({ theme, setTheme }) => {
       .map(([product, data]) => ({ product, ...data }))
       .sort((a, b) => b.revenue - a.revenue);
   };
+
   const getTopCustomers = () => {
     const customerPurchases = {};
     filteredSalesData.forEach((sale) => {
@@ -269,14 +283,17 @@ const Reports = ({ theme, setTheme }) => {
       .map(([customer, amount]) => ({ customer, amount }))
       .sort((a, b) => b.amount - a.amount);
   };
+
   const fetchMonthlyStock = async (year, month) => {
     const response = await apiClient.get(`/api/reports/monthly?year=${year}&month=${month}`);
     return response.data;
   };
+
   const fetchYearlyStock = async (year) => {
     const response = await apiClient.get(`/api/reports/yearly?year=${year}`);
     return response.data;
   };
+
   const generateStockReport = async () => {
     setLoading(true);
     try {
@@ -295,16 +312,19 @@ const Reports = ({ theme, setTheme }) => {
       setLoading(false);
     }
   };
+
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
   const currentSales = filteredSalesData.slice(indexOfFirstItem, indexOfLastItem);
   const currentTopProducts = getTopProducts().slice(indexOfFirstItem, indexOfLastItem);
   const currentTopCustomers = getTopCustomers().slice(indexOfFirstItem, indexOfLastItem);
   const currentPaidServices = filteredPaidServices.slice(indexOfFirstItem, indexOfLastItem);
+
   const totalSalesPages = Math.ceil(filteredSalesData.length / itemsPerPage);
   const totalProductPages = Math.ceil(getTopProducts().length / itemsPerPage);
   const totalCustomerPages = Math.ceil(getTopCustomers().length / itemsPerPage);
   const totalServicePages = Math.ceil(filteredPaidServices.length / itemsPerPage);
+
   const handleNextPage = () => {
     if (selectedReport === "sales" && currentPage < totalSalesPages) {
       setCurrentPage(currentPage + 1);
@@ -316,16 +336,19 @@ const Reports = ({ theme, setTheme }) => {
       setCurrentPage(currentPage + 1);
     }
   };
+
   const handlePrevPage = () => {
     if (currentPage > 1) {
       setCurrentPage(currentPage - 1);
     }
   };
+
   const exportReport = () => {
     console.log("Exporting report...", { selectedReport, dateFrom, dateTo, productFilter, customerFilter, timeFrom, timeTo });
     setReportMessage("Report exported successfully!");
   };
-  const handlePrint = (reportType, sale = null) => {
+
+  const handlePrint = (reportType, item = null) => {
     const reportData = {
       type: reportType,
       dateFrom,
@@ -337,93 +360,151 @@ const Reports = ({ theme, setTheme }) => {
       stats: getSalesStats(),
       topProducts: getTopProducts(),
       topCustomers: getTopCustomers(),
-      sales: sale ? [sale] : filteredSalesData,
+      sales: item && reportType === 'sales' ? [item] : filteredSalesData,
+      services: item && reportType === 'services' ? [item] : filteredPaidServices,
       stockReport: stockReportData,
       timestamp: new Date().toISOString(),
       reportId: `RPT-${Date.now()}`,
-      singleSale: sale,
+      singleSale: reportType === 'sales' ? item : null,
+      singleService: reportType === 'services' ? item : null,
       period: stockReportData?.period || (selectedReport === "monthlyStock" ? `${monthNames[selectedMonth - 1]} ${selectedYear}` : selectedYear),
     };
     const printWindow = window.open('', '_blank');
     printWindow.document.write(generatePrintContent(reportData));
     printWindow.document.close();
   };
+  
   const generatePrintContent = (reportData) => {
     if (!reportData) return '';
-    const { type, dateFrom, dateTo, productFilter, customerFilter, timeFrom, timeTo, stats, topProducts, topCustomers, sales, stockReport, reportId, timestamp, singleSale, period } = reportData;
+  
+    const { type, dateFrom, dateTo, productFilter, customerFilter, timeFrom, timeTo, stats, topProducts, topCustomers, sales, stockReport, reportId, timestamp, singleSale, singleService, period } = reportData;
+  
     let reportContent = '';
+  
     const hexToRgba = (hex, alpha = 0.2) => {
       let r = parseInt(hex.slice(1, 3), 16);
       let g = parseInt(hex.slice(3, 5), 16);
       let b = parseInt(hex.slice(5, 7), 16);
       return `rgba(${r},${g},${b},${alpha})`;
     };
+  
     if (type === 'sales' && singleSale) {
-      reportContent = `
-        <div style="margin-bottom: 15mm;">
-          <div style="margin-bottom: 10mm;">
-            <p><strong>Customer:</strong> ${singleSale.customer.name}</p>
-            <p><strong>Phone:</strong> ${singleSale.customer.phone}</p>
-          </div>
-          <table style="width: 100%; border-collapse: collapse;">
-            <tr>
-              <th style="border: 1px solid #000000; padding: 5mm; text-align: left;">Sr. No.</th>
-              <th style="border: 1px solid #000000; padding: 5mm; text-align: left;">Items</th>
-              <th style="border: 1px solid #000000; padding: 5mm; text-align: left;">Quantity</th>
-              <th style="border: 1px solid #000000; padding: 5mm; text-align: left;">Price / Unit</th>
-              <th style="border: 1px solid #000000; padding: 5mm; text-align: left;">Tax Rate</th>
-              <th style="border: 1px solid #000000; padding: 5mm; text-align: left;">Amount</th>
-            </tr>
-            ${singleSale.items.map((item, index) => `
-              <tr>
-                <td style="border: 1px solid #000000; padding: 5mm;">${index + 1}</td>
-                <td style="border: 1px solid #000000; padding: 5mm;">${item.name}</td>
-                <td style="border: 1px solid #000000; padding: 5mm;">${item.quantity}</td>
-                <td style="border: 1px solid #000000; padding: 5mm;">Rs. ${item.price.toFixed(2)}</td>
-                <td style="border: 1px solid #000000; padding: 5mm;">${singleSale.gstPercentage}%</td>
-                <td style="border: 1px solid #000000; padding: 5mm;">Rs. ${(item.price * item.quantity + item.price * item.quantity * (singleSale.gstPercentage / 100)).toFixed(2)}</td>
-              </tr>
-            `).join('')}
-          </table>
-          <table style="width: 100%; border-collapse: collapse; margin-bottom: 1rem;">
-            <tbody>
-              <tr>
-                <td style="border: 1px solid #000; padding: 0.5rem; text-align: right"><strong>Sub Total</strong></td>
-                <td style="border: 1px solid #000; padding: 0.5rem;"></td>
-                <td style="border: 1px solid #000; padding: 0.5rem;"></td>
-                <td style="border: 1px solid #000; padding: 0.5rem; text-align: right">Rs. ${singleSale.subtotal.toFixed(2)}</td>
-              </tr>
-              <tr>
-                <td style="border: 1px solid #000; padding: 0.5rem; text-align: right"><strong>GST</strong></td>
-                <td style="border: 1px solid #000; padding: 0.5rem;"></td>
-                <td style="border: 1px solid #000; padding: 0.5rem;">Rs. ${singleSale.tax.toFixed(2)}</td>
-                <td style="border: 1px solid #000; padding: 0.5rem; text-align: right">Rs. ${singleSale.tax.toFixed(2)}</td>
-              </tr>
-              <tr style="background-color: ${hexToRgba(shopColor || "#000000", 0.2)}">
-                <td style="border: 1px solid #000; padding: 0.5rem"><strong>Grand Total</strong></td>
-                <td style="border: 1px solid #000; padding: 0.5rem;"></td>
-                <td style="border: 1px solid #000; padding: 0.5rem;"></td>
-                <td style="border: 1px solid #000; padding: 0.5rem; text-align: right">Rs. ${singleSale.total.toFixed(2)}</td>
-              </tr>
-            </tbody>
-          </table>
-          ${enableTermsPrint ? `
-            <div style="margin-bottom: 1rem;">
-              <strong>Terms & Conditions</strong>
-              <ol style="margin: 0; padding-left: 1rem;">
-                <li>Note: Verbal Deal</li>
-                <li>Customer will pay the GST</li>
-                <li>Customer will pay the Delivery charges</li>
-                <li>Pay due amount within 15 days</li>
-              </ol>
+        reportContent = `
+          <div style="margin-bottom: 15mm;">
+            <div style="margin-bottom: 10mm;">
+              <p><strong>Customer:</strong> ${singleSale.customer.name}</p>
+              <p><strong>Phone:</strong> ${singleSale.customer.phone}</p>
             </div>
-          ` : ''}
-          <div style="text-align: center;">
-            <div style="border-bottom: 1px solid #000; width: 200px; margin: 2rem auto 0.5rem;"></div>
-            <strong>Authorized Signature for ${shopDetails.shopName}</strong>
+            <table style="width: 100%; border-collapse: collapse;">
+              <tr>
+                <th style="border: 1px solid #000000; padding: 5mm; text-align: left;">Sr. No.</th>
+                <th style="border: 1px solid #000000; padding: 5mm; text-align: left;">Items</th>
+                <th style="border: 1px solid #000000; padding: 5mm; text-align: left;">Quantity</th>
+                <th style="border: 1px solid #000000; padding: 5mm; text-align: left;">Price / Unit</th>
+                <th style="border: 1px solid #000000; padding: 5mm; text-align: left;">Tax Rate</th>
+                <th style="border: 1px solid #000000; padding: 5mm; text-align: left;">Amount</th>
+              </tr>
+              ${singleSale.items.map((item, index) => `
+                <tr>
+                  <td style="border: 1px solid #000000; padding: 5mm;">${index + 1}</td>
+                  <td style="border: 1px solid #000000; padding: 5mm;">${item.name}</td>
+                  <td style="border: 1px solid #000000; padding: 5mm;">${item.quantity}</td>
+                  <td style="border: 1px solid #000000; padding: 5mm;">Rs. ${item.price.toFixed(2)}</td>
+                  <td style="border: 1px solid #000000; padding: 5mm;">${singleSale.gstPercentage}%</td>
+                  <td style="border: 1px solid #000000; padding: 5mm;">Rs. ${(item.price * item.quantity + item.price * item.quantity * (singleSale.gstPercentage / 100)).toFixed(2)}</td>
+                </tr>
+              `).join('')}
+            </table>
+            <table style="width: 100%; border-collapse: collapse; margin-bottom: 1rem;">
+              <tbody>
+                <tr>
+                  <td style="border: 1px solid #000; padding: 0.5rem; text-align: right"><strong>Sub Total</strong></td>
+                  <td style="border: 1px solid #000; padding: 0.5rem;"></td>
+                  <td style="border: 1px solid #000; padding: 0.5rem;"></td>
+                  <td style="border: 1px solid #000; padding: 0.5rem; text-align: right">Rs. ${singleSale.subtotal.toFixed(2)}</td>
+                </tr>
+                <tr>
+                  <td style="border: 1px solid #000; padding: 0.5rem; text-align: right"><strong>GST</strong></td>
+                  <td style="border: 1px solid #000; padding: 0.5rem;"></td>
+                  <td style="border: 1px solid #000; padding: 0.5rem;">Rs. ${singleSale.tax.toFixed(2)}</td>
+                  <td style="border: 1px solid #000; padding: 0.5rem; text-align: right">Rs. ${singleSale.tax.toFixed(2)}</td>
+                </tr>
+                <tr style="background-color: ${hexToRgba(shopColor || "#000000", 0.2)}">
+                  <td style="border: 1px solid #000; padding: 0.5rem"><strong>Grand Total</strong></td>
+                  <td style="border: 1px solid #000; padding: 0.5rem;"></td>
+                  <td style="border: 1px solid #000; padding: 0.5rem;"></td>
+                  <td style="border: 1px solid #000; padding: 0.5rem; text-align: right">Rs. ${singleSale.total.toFixed(2)}</td>
+                </tr>
+              </tbody>
+            </table>
+            ${enableTermsPrint ? `
+              <div style="margin-bottom: 1rem;">
+                <strong>Terms & Conditions</strong>
+                <ol style="margin: 0; padding-left: 1rem;">
+                  <li>Note: Verbal Deal</li>
+                  <li>Customer will pay the GST</li>
+                  <li>Customer will pay the Delivery charges</li>
+                  <li>Pay due amount within 15 days</li>
+                </ol>
+              </div>
+            ` : ''}
+            <div style="text-align: center;">
+              <div style="border-bottom: 1px solid #000; width: 200px; margin: 2rem auto 0.5rem;"></div>
+              <strong>Authorized Signature for ${shopDetails.shopName}</strong>
+            </div>
           </div>
-        </div>
-      `;
+        `;
+    } else if (type === 'services' && singleService) {
+        reportContent = `
+            <div style="margin-bottom: 15mm;">
+                <div style="margin-bottom: 10mm;">
+                    <p><strong>Customer:</strong> ${singleService.customer.name}</p>
+                    <p><strong>Phone:</strong> ${singleService.customer.phone}</p>
+                    <hr style="border: 0; border-top: 1px dashed #000; margin: 10mm 0;" />
+                    <p><strong>Device:</strong> ${singleService.device.brand} ${singleService.device.model}</p>
+                    <p><strong>Complaint Type:</strong> ${singleService.problem.complaintType}</p>
+                    <p><strong>Description:</strong> ${singleService.problem.description}</p>
+                </div>
+                <table style="width: 100%; border-collapse: collapse; margin-bottom: 1rem;">
+                    <thead>
+                        <tr>
+                            <th style="border: 1px solid #000; padding: 5mm; text-align: left;">Description</th>
+                            <th style="border: 1px solid #000; padding: 5mm; text-align: right;">Amount</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td style="border: 1px solid #000; padding: 5mm;">Service Charge for ${singleService.device.brand} ${singleService.device.model}</td>
+                            <td style="border: 1px solid #000; padding: 5mm; text-align: right;">Rs. ${singleService.total.toFixed(2)}</td>
+                        </tr>
+                        ${singleService.manualTotal ? `
+                            <tr style="background-color: ${hexToRgba(shopColor || "#000000", 0.2)}">
+                                <td style="border: 1px solid #000; padding: 5mm;"><strong>Final Amount</strong></td>
+                                <td style="border: 1px solid #000; padding: 5mm; text-align: right;"><strong>Rs. ${singleService.manualTotal.toFixed(2)}</strong></td>
+                            </tr>
+                        ` : ''}
+                    </tbody>
+                </table>
+                <div style="text-align: right; margin-bottom: 1rem; padding-top: 1rem;">
+                  <strong style="font-size: 1.2rem;">Total Amount: Rs. ${(singleService.manualTotal || singleService.total).toFixed(2)}</strong>
+                </div>
+                ${enableTermsPrint ? `
+                    <div style="margin-bottom: 1rem; margin-top: 2rem;">
+                        <strong>Terms & Conditions</strong>
+                        <ol style="margin: 0; padding-left: 1rem;">
+                            <li>Note: Verbal Deal</li>
+                            <li>Customer will pay the GST</li>
+                            <li>Customer will pay the Delivery charges</li>
+                            <li>Pay due amount within 15 days</li>
+                        </ol>
+                    </div>
+                ` : ''}
+                <div style="text-align: center; margin-top: 4rem;">
+                    <div style="border-bottom: 1px solid #000; width: 200px; margin: 2rem auto 0.5rem;"></div>
+                    <strong>Authorized Signature for ${shopDetails.shopName}</strong>
+                </div>
+            </div>
+        `;
     } else if (type === 'sales') {
       reportContent = `
         <div style="margin-bottom: 15mm;">
@@ -567,40 +648,41 @@ const Reports = ({ theme, setTheme }) => {
         </div>
       `;
     } else if (type === 'services') {
-      reportContent = `
-        <div style="margin-bottom: 15mm;">
-          <h2 style="font-size: 14pt; margin-bottom: 5mm;">Paid Services Report</h2>
-          <table style="width: 100%; border-collapse: collapse;">
-            <tr>
-              <th style="border: 1px solid #000000; padding: 5mm; text-align: left;">Service Number</th>
-              <th style="border: 1px solid #000000; padding: 5mm; text-align: left;">Customer Name</th>
-              <th style="border: 1px solid #000000; padding: 5mm; text-align: left;">Phone</th>
-              <th style="border: 1px solid #000000; padding: 5mm; text-align: left;">Brand</th>
-              <th style="border: 1px solid #000000; padding: 5mm; text-align: left;">Model</th>
-              <th style="border: 1px solid #000000; padding: 5mm; text-align: left;">Complaint Type</th>
-              <th style="border: 1px solid #000000; padding: 5mm; text-align: left;">Description</th>
-              <th style="border: 1px solid #000000; padding: 5mm; text-align: left;">Total</th>
-              <th style="border: 1px solid #000000; padding: 5mm; text-align: left;">Manual Amount</th>
-              <th style="border: 1px solid #000000; padding: 5mm; text-align: left;">Status</th>
-            </tr>
-            ${filteredPaidServices.map(service => `
+        reportContent = `
+          <div style="margin-bottom: 15mm;">
+            <h2 style="font-size: 14pt; margin-bottom: 5mm;">Paid Services Report</h2>
+            <table style="width: 100%; border-collapse: collapse;">
               <tr>
-                <td style="border: 1px solid #000000; padding: 5mm;">${service.serviceNumber}</td>
-                <td style="border: 1px solid #000000; padding: 5mm;">${service.customer.name}</td>
-                <td style="border: 1px solid #000000; padding: 5mm;">${service.customer.phone}</td>
-                <td style="border: 1px solid #000000; padding: 5mm;">${service.device.brand}</td>
-                <td style="border: 1px solid #000000; padding: 5mm;">${service.device.model}</td>
-                <td style="border: 1px solid #000000; padding: 5mm;">${service.problem.complaintType}</td>
-                <td style="border: 1px solid #000000; padding: 5mm;">${service.problem.description}</td>
-                <td style="border: 1px solid #000000; padding: 5mm;">${service.total.toLocaleString()}</td>
-                <td style="border: 1px solid #000000; padding: 5mm;">${service.manualTotal ? `${service.manualTotal.toLocaleString()}` : 'N/A'}</td>
-                <td style="border: 1px solid #000000; padding: 5mm;">${service.status}</td>
+                <th style="border: 1px solid #000000; padding: 5mm; text-align: left;">Service Number</th>
+                <th style="border: 1px solid #000000; padding: 5mm; text-align: left;">Customer Name</th>
+                <th style="border: 1px solid #000000; padding: 5mm; text-align: left;">Phone</th>
+                <th style="border: 1px solid #000000; padding: 5mm; text-align: left;">Brand</th>
+                <th style="border: 1px solid #000000; padding: 5mm; text-align: left;">Model</th>
+                <th style="border: 1px solid #000000; padding: 5mm; text-align: left;">Complaint Type</th>
+                <th style="border: 1px solid #000000; padding: 5mm; text-align: left;">Description</th>
+                <th style="border: 1px solid #000000; padding: 5mm; text-align: left;">Total</th>
+                <th style="border: 1px solid #000000; padding: 5mm; text-align: left;">Manual Amount</th>
+                <th style="border: 1px solid #000000; padding: 5mm; text-align: left;">Status</th>
               </tr>
-            `).join('')}
-          </table>
-        </div>
-      `;
-    }
+              ${filteredPaidServices.map(service => `
+                <tr>
+                  <td style="border: 1px solid #000000; padding: 5mm;">${service.serviceNumber}</td>
+                  <td style="border: 1px solid #000000; padding: 5mm;">${service.customer.name}</td>
+                  <td style="border: 1px solid #000000; padding: 5mm;">${service.customer.phone}</td>
+                  <td style="border: 1px solid #000000; padding: 5mm;">${service.device.brand}</td>
+                  <td style="border: 1px solid #000000; padding: 5mm;">${service.device.model}</td>
+                  <td style="border: 1px solid #000000; padding: 5mm;">${service.problem.complaintType}</td>
+                  <td style="border: 1px solid #000000; padding: 5mm;">${service.problem.description}</td>
+                  <td style="border: 1px solid #000000; padding: 5mm;">${service.total.toLocaleString()}</td>
+                  <td style="border: 1px solid #000000; padding: 5mm;">${service.manualTotal ? `${service.manualTotal.toLocaleString()}` : 'N/A'}</td>
+                  <td style="border: 1px solid #000000; padding: 5mm;">${service.isDeleted ? 'Deleted' : service.status}</td>
+                </tr>
+              `).join('')}
+            </table>
+          </div>
+        `;
+      }
+  
     return `
       <html>
         <head>
@@ -635,7 +717,7 @@ const Reports = ({ theme, setTheme }) => {
                 <p>${enableGstinPrint ? `GSTIN: ${shopDetails.gstin}` : ''}</p>
                 <p>${enablePanPrint ? `PAN Number: ${panNumber}` : ''}</p>
               </div>
-              <p>${singleSale ? 'Invoice' : 'Report'}: ${reportId}</p>
+              <p>${(singleSale || singleService) ? (singleSale ? 'Invoice' : 'Service Receipt') : 'Report'}: ${reportId}</p>
               <p>Date: ${new Date(timestamp).toLocaleString()}</p>
               ${(type === 'sales' && (dateFrom || dateTo)) ? `<p>Period: ${dateFrom || 'Start'} to ${dateTo || 'Today'}</p>` : ''}
               ${type === 'sales' && productFilter ? `<p>Product Filter: ${productFilter}</p>` : ''}
@@ -657,6 +739,7 @@ const Reports = ({ theme, setTheme }) => {
       </html>
     `;
   };
+
   const stats = getSalesStats();
   const topProducts = getTopProducts();
   const topCustomers = getTopCustomers();
@@ -667,6 +750,7 @@ const Reports = ({ theme, setTheme }) => {
     { id: "sunset", label: "Sunset", icon: Grid },
   ];
   const selectedTheme = themeOptions.find(t => t.id === theme) || themeOptions[0];
+
   const renderSalesReport = () => (
     <div style={{ marginTop: "1rem" }}>
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(12rem, 1fr))", gap: "1rem", marginBottom: "2rem" }}>
@@ -707,6 +791,7 @@ const Reports = ({ theme, setTheme }) => {
           </div>
         </div>
       </div>
+
       <div style={{ backgroundColor: styles.cardBg, borderRadius: styles.radius, boxShadow: styles.shadowCard }}>
         <div style={{ padding: "1rem", borderBottom: `1px solid ${styles.border}`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
           <h5 style={{ fontSize: "1.25rem", fontWeight: "600", margin: 0, color: styles.textColor }}>Recent Sales Transactions</h5>
@@ -778,6 +863,7 @@ const Reports = ({ theme, setTheme }) => {
       </div>
     </div>
   );
+
   const renderProductReport = () => (
     <div style={{ backgroundColor: styles.cardBg, borderRadius: styles.radius, boxShadow: styles.shadowCard, marginTop: "1rem" }}>
       <div style={{ padding: "1rem", borderBottom: `1px solid ${styles.border}`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
@@ -819,6 +905,7 @@ const Reports = ({ theme, setTheme }) => {
       </div>
     </div>
   );
+
   const renderCustomerReport = () => (
     <div style={{ backgroundColor: styles.cardBg, borderRadius: styles.radius, boxShadow: styles.shadowCard, marginTop: "1rem" }}>
       <div style={{ padding: "1rem", borderBottom: `1px solid ${styles.border}`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
@@ -859,6 +946,7 @@ const Reports = ({ theme, setTheme }) => {
       </div>
     </div>
   );
+
   const renderStockReport = () => {
     if (loading) {
       return <div style={{ textAlign: "center", padding: "2rem", color: styles.textColor }}>Loading stock report...</div>;
@@ -869,14 +957,17 @@ const Reports = ({ theme, setTheme }) => {
     if (!stockReportData) {
       return <div style={{ textAlign: "center", padding: "2rem", color: styles.textColor }}>Please generate the stock report</div>;
     }
+
     const productMap = {};
     stockReportData.current_stock.forEach((item) => {
       productMap[item._id] = item.name;
     });
+
     const totalSold = stockReportData.sales.reduce((sum, item) => sum + item.totalSold, 0);
     const totalRevenue = stockReportData.sales.reduce((sum, item) => sum + item.totalRevenue, 0);
     const totalAdded = stockReportData.additions.reduce((sum, item) => sum + item.totalAdded, 0);
     const totalStock = stockReportData.current_stock.reduce((sum, item) => sum + item.stock, 0);
+
     return (
       <div style={{ backgroundColor: styles.cardBg, borderRadius: styles.radius, boxShadow: styles.shadowCard, marginTop: "1rem" }}>
         <div style={{ padding: "1rem", borderBottom: `1px solid ${styles.border}`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
@@ -913,6 +1004,7 @@ const Reports = ({ theme, setTheme }) => {
           </div>
           <p style={{ color: styles.textColor, margin: "0.5rem 0" }}>Total Quantity Sold: {totalSold}</p>
           <p style={{ color: styles.textColor, margin: "0.5rem 0" }}>Total Revenue: {totalRevenue.toLocaleString()}</p>
+
           <h6 style={{ color: styles.textColor, margin: "1rem 0" }}>Stock Added</h6>
           <div className="table-responsive">
             <table className="table table-striped table-bordered">
@@ -934,6 +1026,7 @@ const Reports = ({ theme, setTheme }) => {
             </table>
           </div>
           <p style={{ color: styles.textColor, margin: "0.5rem 0" }}>Total Quantity Added: {totalAdded}</p>
+
           <h6 style={{ color: styles.textColor, margin: "1rem 0" }}>Current Stock Balance</h6>
           <div className="table-responsive">
             <table className="table table-striped table-bordered">
@@ -959,6 +1052,7 @@ const Reports = ({ theme, setTheme }) => {
       </div>
     );
   };
+
   const renderServiceReport = () => (
     <div style={{ backgroundColor: styles.cardBg, borderRadius: styles.radius, boxShadow: styles.shadowCard, marginTop: "1rem" }}>
       <div style={{ padding: "1rem", borderBottom: `1px solid ${styles.border}`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
@@ -972,7 +1066,7 @@ const Reports = ({ theme, setTheme }) => {
           <table className="table table-striped table-bordered">
             <thead>
               <tr>
-                {["Service Number", "Customer Name", "Phone", "Brand", "Model", "Complaint Type", "Description", "Total", "Manual Amount", "Status"].map((header) => (
+                {["Service No", "Customer", "Phone", "Device", "Complaint", "Description", "Total", "Manual Total", "Status", "Action"].map((header) => (
                   <th key={header}>{header}</th>
                 ))}
               </tr>
@@ -983,13 +1077,17 @@ const Reports = ({ theme, setTheme }) => {
                   <td>{service.serviceNumber}</td>
                   <td>{service.customer.name}</td>
                   <td>{service.customer.phone}</td>
-                  <td>{service.device.brand}</td>
-                  <td>{service.device.model}</td>
+                  <td>{service.device.brand} {service.device.model}</td>
                   <td>{service.problem.complaintType}</td>
                   <td>{service.problem.description}</td>
                   <td>{service.total.toLocaleString()}</td>
                   <td>{service.manualTotal ? `${service.manualTotal.toLocaleString()}` : 'N/A'}</td>
-                  <td>{service.status}</td>
+                  <td>{service.isDeleted ? 'Deleted' : service.status}</td>
+                  <td>
+                    <button style={{ padding: "0.25rem 0.5rem", backgroundColor: styles.buttonOutlineBg, color: styles.buttonOutlineText, border: `1px solid ${styles.border}`, borderRadius: styles.radius, cursor: "pointer" }} onClick={() => handlePrint('services', service)}>
+                      <Printer size={16} />
+                    </button>
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -1007,6 +1105,7 @@ const Reports = ({ theme, setTheme }) => {
       </div>
     </div>
   );
+
   const handleReportTypeChange = (type) => {
     setSelectedReport(type);
     setStockReportData(null);
@@ -1015,9 +1114,11 @@ const Reports = ({ theme, setTheme }) => {
     setSelectedMonth("");
     setError(null);
   };
+
   const isMonthlyReportReady = selectedReport === "monthlyStock" && selectedYear && selectedMonth;
   const isYearlyReportReady = selectedReport === "yearlyStock" && selectedYear;
   const isReportReady = isMonthlyReportReady || isYearlyReportReady;
+
   return (
     <div style={{ backgroundColor: styles.bgColor, color: styles.foreground, minHeight: "100vh", padding: "2rem" }}>
       <div className="container-fluid">
@@ -1104,10 +1205,10 @@ const Reports = ({ theme, setTheme }) => {
                     onClick={() => handleReportTypeChange(type)}
                   >
                     {type === "sales" ? "Sales Report" :
-                     type === "products" ? "Product Report" :
-                     type === "customers" ? "Customer Report" :
-                     type === "services" ? "Service Report" :
-                     type === "monthlyStock" ? "Monthly Stock Report" : "Yearly Stock Report"}
+                      type === "products" ? "Product Report" :
+                        type === "customers" ? "Customer Report" :
+                          type === "services" ? "Service Report" :
+                            type === "monthlyStock" ? "Monthly Stock Report" : "Yearly Stock Report"}
                   </button>
                 ))}
               </div>
@@ -1298,4 +1399,5 @@ const Reports = ({ theme, setTheme }) => {
     </div>
   );
 };
+
 export default Reports;
