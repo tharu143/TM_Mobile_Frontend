@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
+import apiClient, { API_BASE_URL } from "../config/api";
 import { Search, Plus, Minus, Trash2, CreditCard, Banknote, Smartphone, ShoppingCart, Sun, Moon, Leaf, Grid } from "lucide-react";
 // Inline SVG Icons
 const SearchIcon = ({ style }) => (
@@ -272,11 +273,11 @@ const PointOfSale = ({ theme, setTheme }) => {
       try {
         setLoading(true);
         const [productsRes, mobilesRes, accessoriesRes, settingsRes, printRes] = await Promise.all([
-          axios.get("http://localhost:5000/api/products"),
-          axios.get("http://localhost:5000/api/mobiles"),
-          axios.get("http://localhost:5000/api/accessories"),
-          axios.get("http://localhost:5000/api/settings"),
-          axios.get("http://localhost:5000/api/print"),
+          apiClient.get("/api/products"),
+          apiClient.get("/api/mobiles"),
+          apiClient.get("/api/accessories"),
+          apiClient.get("/api/settings"),
+          apiClient.get("/api/print"),
         ]);
         setProducts(productsRes.data);
         setMobiles(mobilesRes.data);
@@ -307,7 +308,7 @@ const PointOfSale = ({ theme, setTheme }) => {
     const fetchCustomerSuggestions = async () => {
       if (customerName.trim() || customerPhone.trim()) {
         try {
-          const response = await axios.get("http://localhost:5000/api/customers/search", {
+          const response = await apiClient.get("/api/customers/search", {
             params: { query: customerName || customerPhone },
           });
           setCustomerSuggestions(response.data);
@@ -423,7 +424,7 @@ const PointOfSale = ({ theme, setTheme }) => {
       gstPercentage: enableGst ? gstPercentage : 0,
     };
     try {
-      await axios.post("http://localhost:5000/api/sales", saleData);
+      await apiClient.post("/api/sales", saleData);
       setProducts((prevProducts) =>
         prevProducts.map((product) => {
           const cartItem = cart.find((item) => item.id === product._id);
@@ -792,7 +793,7 @@ const PointOfSale = ({ theme, setTheme }) => {
                     }}>
                       {product.image ? (
                         <img
-                          src={`http://localhost:5000${product.image}`}
+                          src={`${API_BASE_URL}${product.image}`}
                           alt={product.name}
                           style={{ maxHeight: "100%", maxWidth: "100%", objectFit: "contain" }}
                         />
@@ -974,7 +975,7 @@ const PointOfSale = ({ theme, setTheme }) => {
                   >
                     {item.image ? (
                       <img
-                        src={`http://localhost:5000${item.image}`}
+                        src={`${API_BASE_URL}${item.image}`}
                         alt={item.name}
                         style={{ maxHeight: "100%", maxWidth: "100%", objectFit: "contain" }}
                       />

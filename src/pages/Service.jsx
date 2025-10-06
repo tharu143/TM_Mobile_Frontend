@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { Button, Table, message, Popconfirm, Input } from 'antd';
 import axios from 'axios';
+import apiClient from '../config/api';
 import { useNavigate } from 'react-router-dom';
 
 const { Search } = Input;
@@ -17,7 +18,7 @@ const Service = ({ theme }) => {
 
   const fetchServices = async () => {
     try {
-      const response = await axios.get('/api/services');
+      const response = await apiClient.get('/api/services');
       const activeServices = response.data.filter(service => !service.deleted);
       setServices(activeServices);
       setFilteredServices(activeServices);
@@ -29,7 +30,7 @@ const Service = ({ theme }) => {
 
   const handleDelete = async (id) => {
     try {
-      await axios.delete(`/api/services/${id}`);
+      await apiClient.delete(`/api/services/${id}`);
       message.success('Service deleted successfully');
       fetchServices();
     } catch (error) {

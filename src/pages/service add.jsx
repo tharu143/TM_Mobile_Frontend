@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { Button, Form, Input, InputNumber, DatePicker, Select, message, Row, Col } from 'antd';
 import axios from 'axios';
+import apiClient from '../config/api';
 import { useNavigate, useLocation } from 'react-router-dom';
 
 const { Option } = Select;
@@ -32,10 +33,10 @@ const ServiceAdd = ({ theme }) => {
       const data = { ...values, total, status: 'pending' }; // Initial status pending if add
 
       if (isEdit) {
-        await axios.put(`/api/services/${serviceId}`, data);
+        await apiClient.put(`/api/services/${serviceId}`, data);
         message.success('Service updated successfully');
       } else {
-        await axios.post('/api/services', data);
+        await apiClient.post('/api/services', data);
         message.success('Service added successfully');
       }
       navigate('/service'); // Back to list

@@ -1,6 +1,7 @@
 // Reports.jsx (Modified to show deleted services in reports if status is 'completed-paid'; fetches all services, filters by status only)
 import { useState, useEffect } from "react";
 import axios from "axios";
+import apiClient, { API_BASE_URL } from "../config/api";
 import { BarChart3, Download, TrendingUp, DollarSign, Printer, RefreshCw, Sun, Moon, Leaf, Grid } from "lucide-react";
 // Inline SVG Icons
 const BarChart3Icon = () => (
@@ -170,10 +171,10 @@ const Reports = ({ theme, setTheme }) => {
     try {
       setLoading(true);
       const [salesResponse, printResponse, productsResponse, servicesResponse] = await Promise.all([
-        axios.get("http://localhost:5000/api/sales"),
-        axios.get("http://localhost:5000/api/print"),
-        axios.get("http://localhost:5000/api/products"),
-        axios.get("http://localhost:5000/api/services")
+        apiClient.get("/api/sales"),
+        apiClient.get("/api/print"),
+        apiClient.get("/api/products"),
+        apiClient.get("/api/services")
       ]);
       setSalesData(salesResponse.data);
       setProductsData(productsResponse.data);
@@ -269,11 +270,11 @@ const Reports = ({ theme, setTheme }) => {
       .sort((a, b) => b.amount - a.amount);
   };
   const fetchMonthlyStock = async (year, month) => {
-    const response = await axios.get(`http://localhost:5000/api/reports/monthly?year=${year}&month=${month}`);
+    const response = await apiClient.get(`/api/reports/monthly?year=${year}&month=${month}`);
     return response.data;
   };
   const fetchYearlyStock = async (year) => {
-    const response = await axios.get(`http://localhost:5000/api/reports/yearly?year=${year}`);
+    const response = await apiClient.get(`/api/reports/yearly?year=${year}`);
     return response.data;
   };
   const generateStockReport = async () => {

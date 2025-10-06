@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { Search, PackagePlus, Edit, Trash2, Package, AlertTriangle, X, FileSpreadsheet, FileUp, DollarSign, Grid3x3, Sun, Moon, Leaf, Grid } from "lucide-react";
 import axios from "axios";
+import apiClient, { API_BASE_URL } from "../config/api";
 // Custom Confirmation Modal Component
 const ConfirmModal = ({ message, onConfirm, onCancel, theme }) => {
   const themeStyles = {
@@ -456,7 +457,7 @@ const InventoryManagement = ({ theme, setTheme }) => {
   const fetchProducts = async () => {
     try {
       setLoading(true);
-      const response = await axios.get("http://localhost:5000/api/products");
+      const response = await apiClient.get("/api/products");
       setProducts(response.data);
       setLoading(false);
     } catch (error) {
@@ -467,7 +468,7 @@ const InventoryManagement = ({ theme, setTheme }) => {
   };
   const fetchMobiles = async () => {
     try {
-      const response = await axios.get("http://localhost:5000/api/mobiles");
+      const response = await apiClient.get("/api/mobiles");
       setMobiles(response.data);
     } catch (error) {
       console.error("Error fetching mobiles:", error);
@@ -475,7 +476,7 @@ const InventoryManagement = ({ theme, setTheme }) => {
   };
   const fetchAccessories = async () => {
     try {
-      const response = await axios.get("http://localhost:5000/api/accessories");
+      const response = await apiClient.get("/api/accessories");
       setAccessories(response.data);
     } catch (error) {
       console.error("Error fetching accessories:", error);
@@ -548,7 +549,7 @@ const InventoryManagement = ({ theme, setTheme }) => {
     const formData = new FormData();
     files.forEach((file, index) => formData.append(`images[${index}]`, file));
     try {
-      const response = await axios.post("http://localhost:5000/api/upload/images", formData, { headers: { "Content-Type": "multipart/form-data" } });
+      const response = await apiClient.post("/api/upload/images", formData, { headers: { "Content-Type": "multipart/form-data" } });
       setUploadedImages((prev) => [...prev, ...response.data.uploadedImages]);
       // No success alert, only warning for errors
     } catch (error) {
@@ -621,12 +622,12 @@ const InventoryManagement = ({ theme, setTheme }) => {
     }
     try {
       const endpoint = editingProduct
-        ? `http://localhost:5000/api/products/${editingProduct._id}`
+        ? `/api/products/${editingProduct._id}`
         : editingMobile
-        ? `http://localhost:5000/api/mobiles/${editingMobile._id}`
+        ? `/api/mobiles/${editingMobile._id}`
         : editingAccessory
-        ? `http://localhost:5000/api/accessories/${editingAccessory._id}`
-        : `http://localhost:5000/api/${formType === "product" ? "products" : formType === "mobile" ? "mobiles" : "accessories"}`;
+        ? `/api/accessories/${editingAccessory._id}`
+        : `/api/${formType === "product" ? "products" : formType === "mobile" ? "mobiles" : "accessories"}`;
       const method = editingProduct || editingMobile || editingAccessory ? "put" : "post";
       await axios[method](endpoint, dataToSend, { headers: { "Content-Type": "multipart/form-data" } });
       // No success alert, only refresh
@@ -717,7 +718,7 @@ const InventoryManagement = ({ theme, setTheme }) => {
   const deleteProduct = (id) => {
     showConfirmation("Are you sure you want to delete this product?", async () => {
       try {
-        await axios.delete(`http://localhost:5000/api/products/${id}`);
+        await apiClient.delete(`/api/products/${id}`);
         setProducts(products.filter((product) => product._id !== id));
         // No success alert
       } catch (error) {
@@ -731,7 +732,7 @@ const InventoryManagement = ({ theme, setTheme }) => {
   const deleteMobile = (id) => {
     showConfirmation("Are you sure you want to delete this mobile type? This will not remove products using this type.", async () => {
       try {
-        await axios.delete(`http://localhost:5000/api/mobiles/${id}`);
+        await apiClient.delete(`/api/mobiles/${id}`);
         setMobiles(mobiles.filter((mobile) => mobile._id !== id));
         // No success alert
       } catch (error) {
@@ -745,7 +746,7 @@ const InventoryManagement = ({ theme, setTheme }) => {
   const deleteAccessory = (id) => {
     showConfirmation("Are you sure you want to delete this accessory type? This will not remove products using this type.", async () => {
       try {
-        await axios.delete(`http://localhost:5000/api/accessories/${id}`);
+        await apiClient.delete(`/api/accessories/${id}`);
         setAccessories(accessories.filter((accessory) => accessory._id !== id));
         // No success alert
       } catch (error) {
@@ -759,11 +760,11 @@ const InventoryManagement = ({ theme, setTheme }) => {
   const handleBulkDelete = async (selected) => {
     try {
       if (selected.includes('all')) {
-        await axios.delete("http://localhost:5000/api/products/all");
+        await apiClient.delete("/api/products/all");
         // No success alert
       } else {
         for (const cat of selected) {
-          await axios.delete(`http://localhost:5000/api/products/category/${encodeURIComponent(cat)}`);
+          await apiClient.delete(`/api/products/category/${encodeURIComponent(cat)}`);
         }
         // No success alert
       }
@@ -775,7 +776,7 @@ const InventoryManagement = ({ theme, setTheme }) => {
   };
   const updateStock = async (id, newStock) => {
     try {
-      await axios.put(`http://localhost:5000/api/products/${id}/stock`, { stock: Number(newStock) });
+      await apiClient.put(`/api/products/${id}/stock`, { stock: Number(newStock) });
       setProducts(products.map((product) => (product._id === id ? { ...product, stock: newStock } : product)));
     } catch (error) {
       console.error("Error updating stock:", error);
@@ -811,7 +812,7 @@ const InventoryManagement = ({ theme, setTheme }) => {
   };
   const handleExportMobiles = async () => {
     try {
-      const response = await axios.get("http://localhost:5000/api/export/mobiles", { responseType: "blob" });
+      const response = await apiClient.get("/api/export/mobiles", { responseType: "blob" });
       const url = window.URL.createObjectURL(new Blob([response.data]));
       const link = document.createElement("a");
       link.href = url;
@@ -828,7 +829,7 @@ const InventoryManagement = ({ theme, setTheme }) => {
   };
   const handleExportAccessories = async () => {
     try {
-      const response = await axios.get("http://localhost:5000/api/export/accessories", { responseType: "blob" });
+      const response = await apiClient.get("/api/export/accessories", { responseType: "blob" });
       const url = window.URL.createObjectURL(new Blob([response.data]));
       const link = document.createElement("a");
       link.href = url;
@@ -850,7 +851,7 @@ const InventoryManagement = ({ theme, setTheme }) => {
     formData.append("file", file);
     try {
       setLoading(true);
-      const response = await axios.post("http://localhost:5000/api/import/products", formData, { headers: { "Content-Type": "multipart/form-data" } });
+      const response = await apiClient.post("/api/import/products", formData, { headers: { "Content-Type": "multipart/form-data" } });
       // No success alert, but refresh
       fetchProducts();
       fetchMobiles();

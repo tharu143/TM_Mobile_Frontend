@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
+import apiClient, { API_BASE_URL } from "../config/api";
 import { Save, X, Sun, Moon, Leaf, Grid, Search, Mail, Download } from "lucide-react";
 
 const SettingsPage = ({ theme, setTheme }) => {
@@ -256,11 +257,11 @@ const SettingsPage = ({ theme, setTheme }) => {
     const fetchSettings = async () => {
       try {
         const [settingsResponse, printResponse, emailResponse, backupResponse, lastBackupResponse] = await Promise.all([
-          axios.get("http://localhost:5000/api/settings"),
-          axios.get("http://localhost:5000/api/print"),
-          axios.get("http://localhost:5000/api/email"),
-          axios.get("http://localhost:5000/api/backup/settings"),
-          axios.get("http://localhost:5000/api/backup/last"),
+          apiClient.get("/api/settings"),
+          apiClient.get("/api/print"),
+          apiClient.get("/api/email"),
+          apiClient.get("/api/backup/settings"),
+          apiClient.get("/api/backup/last"),
         ]);
         setGstPercentage(settingsResponse.data.gstPercentage || "");
         setEnableGst(settingsResponse.data.enableGst !== undefined ? settingsResponse.data.enableGst : true);
@@ -298,7 +299,7 @@ const SettingsPage = ({ theme, setTheme }) => {
     setError(null);
     setSuccess(null);
     try {
-      const response = await axios.post("http://localhost:5000/api/settings", {
+      const response = await apiClient.post("/api/settings", {
         gstPercentage: parseFloat(gstPercentage) || 0,
         enableGst: enableGst,
       });
@@ -317,7 +318,7 @@ const SettingsPage = ({ theme, setTheme }) => {
     setError(null);
     setSuccess(null);
     try {
-      const response = await axios.post("http://localhost:5000/api/print", {
+      const response = await apiClient.post("/api/print", {
         shopName,
         address,
         gstin,
@@ -350,7 +351,7 @@ const SettingsPage = ({ theme, setTheme }) => {
     setError(null);
     setSuccess(null);
     try {
-      const response = await axios.post("http://localhost:5000/api/email", {
+      const response = await apiClient.post("/api/email", {
         emailAddress,
         fromEmailAddress,
         appPassword,
@@ -372,7 +373,7 @@ const SettingsPage = ({ theme, setTheme }) => {
     setError(null);
     setSuccess(null);
     try {
-      await axios.delete("http://localhost:5000/api/email");
+      await apiClient.delete("/api/email");
       setSavedEmailSettings(null);
       setEmailAddress("");
       setFromEmailAddress("");
@@ -391,7 +392,7 @@ const SettingsPage = ({ theme, setTheme }) => {
     setError(null);
     setSuccess(null);
     try {
-      const response = await axios.post("http://localhost:5000/api/backup/settings", {
+      const response = await apiClient.post("/api/backup/settings", {
         backupEmail: backupEmails.join(","),
         backupOptions,
         dailyInterval,
@@ -418,7 +419,7 @@ const SettingsPage = ({ theme, setTheme }) => {
     setError(null);
     setSuccess(null);
     try {
-      await axios.delete("http://localhost:5000/api/backup/settings");
+      await apiClient.delete("/api/backup/settings");
       setSavedBackupSettings(null);
       setBackupEmails([]);
       setNewBackupEmail("");
@@ -440,10 +441,10 @@ const SettingsPage = ({ theme, setTheme }) => {
     setSuccess(null);
     setBackupUrl(null);
     try {
-      const response = await axios.get("http://localhost:5000/api/backup");
+      const response = await apiClient.get("/api/backup");
       setBackupUrl(response.data.downloadUrl);
       // Refresh last backup date
-      const lastResponse = await axios.get("http://localhost:5000/api/backup/last");
+      const lastResponse = await apiClient.get("/api/backup/last");
       setLastBackupDate(lastResponse.data.lastBackupDate || "Never");
     } catch (err) {
       setError(`Failed to create backup: ${err.response?.data?.error || err.message}`);

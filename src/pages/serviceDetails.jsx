@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { Button, Form, Input, InputNumber, DatePicker, Select, message, Row, Col, Typography } from 'antd';
 import axios from 'axios';
+import apiClient from '../config/api';
 import { useParams, useNavigate } from 'react-router-dom';
 
 const { Option } = Select;
@@ -21,7 +22,7 @@ const ServiceDetails = ({ theme }) => {
 
   const fetchService = async () => {
     try {
-      const response = await axios.get(`/api/services`);
+      const response = await apiClient.get(`/api/services`);
       const foundService = response.data.find(s => s._id === id);
       if (foundService) {
         setService(foundService);
@@ -53,7 +54,7 @@ const ServiceDetails = ({ theme }) => {
 
       const data = { ...values, total: calculatedTotal, manualTotal, status: newStatus };
 
-      await axios.put(`/api/services/${id}`, data);
+      await apiClient.put(`/api/services/${id}`, data);
       message.success('Service updated successfully');
       navigate('/service'); // Back to list
     } catch (error) {
