@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import apiClient from '../config/api';
 
 function Loginpage({ setIsLoggedIn, theme, toggleTheme }) {
   const [username, setUsername] = useState('');
@@ -9,12 +10,8 @@ function Loginpage({ setIsLoggedIn, theme, toggleTheme }) {
   const handleLogin = async (e) => {
     e.preventDefault();
     try {
-      const response = await fetch('/api/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, password }),
-      });
-      const data = await response.json();
+      const response = await apiClient.post('/api/login', { username, password });
+      const data = response.data;
       if (data.success) {
         localStorage.setItem('loggedIn', 'true');
         setIsLoggedIn(true);
