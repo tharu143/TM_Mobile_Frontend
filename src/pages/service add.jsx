@@ -1,7 +1,6 @@
-// ServiceAdd.jsx (Modified to handle both add and edit via location.state.service; if state.service exists, it's edit mode, use PUT, set form values)
 import React, { useState, useEffect } from 'react';
 import { Button, Form, Input, InputNumber, DatePicker, Select, message, Row, Col } from 'antd';
-import axios from 'axios';
+import dayjs from 'dayjs';
 import apiClient from '../config/api';
 import { useNavigate, useLocation } from 'react-router-dom';
 
@@ -18,7 +17,14 @@ const ServiceAdd = ({ theme }) => {
   useEffect(() => {
     if (location.state?.service) {
       const service = location.state.service;
-      form.setFieldsValue(service);
+      const formattedService = {
+        ...service,
+        device: {
+          ...service.device,
+          receivedDate: service.device.receivedDate ? dayjs(service.device.receivedDate) : null,
+        },
+      };
+      form.setFieldsValue(formattedService);
       setIsEdit(true);
       setServiceId(service._id);
     }
@@ -26,20 +32,27 @@ const ServiceAdd = ({ theme }) => {
 
   const handleFinish = async (values) => {
     try {
-      // Calculate total
       const productRate = values.problem?.productRate || 0;
       const serviceCharge = values.problem?.serviceCharge || 0;
       const total = productRate + serviceCharge;
-      const data = { ...values, total, status: 'pending' }; // Initial status pending if add
+      const formattedValues = {
+        ...values,
+        total,
+        status: 'pending',
+        device: {
+          ...values.device,
+          receivedDate: values.device.receivedDate ? dayjs(values.device.receivedDate).format('YYYY-MM-DD') : null,
+        },
+      };
 
       if (isEdit) {
-        await apiClient.put(`/api/services/${serviceId}`, data);
+        await apiClient.put(`/api/services/${serviceId}`, formattedValues);
         message.success('Service updated successfully');
       } else {
-        await apiClient.post('/api/services', data);
+        await apiClient.post('/api/services', formattedValues);
         message.success('Service added successfully');
       }
-      navigate('/service'); // Back to list
+      navigate('/service');
     } catch (error) {
       console.error('Error saving service:', error);
       message.error('Failed to save service');
@@ -53,10 +66,10 @@ const ServiceAdd = ({ theme }) => {
         <Row gutter={16}>
           <Col span={12}>
             <h2>Customer Details</h2>
-            <Form.Item name={['customer', 'name']} label="Customer Name">
+            <Form.Item name={['customer', 'name']} label="Customer Name" rules={[{ required: true, message: 'Please enter customer name' }]}>
               <Input />
             </Form.Item>
-            <Form.Item name={['customer', 'phone']} label="Mobile Number">
+            <Form.Item name={['customer', 'phone']} label="Mobile Number" rules={[{ required: true, message: 'Please enter mobile number' }]}>
               <Input />
             </Form.Item>
             <Form.Item name={['customer', 'address']} label="Address">
@@ -65,10 +78,10 @@ const ServiceAdd = ({ theme }) => {
           </Col>
           <Col span={12}>
             <h2>Device Details</h2>
-            <Form.Item name={['device', 'brand']} label="Brand">
+            <Form.Item name={['device', 'brand']} label="Brand" rules={[{ required: true, message: 'Please enter brand' }]}>
               <Input />
             </Form.Item>
-            <Form.Item name={['device', 'model']} label="Model">
+            <Form.Item name={['device', 'model']} label="Model" rules={[{ required: true, message: 'Please enter model' }]}>
               <Input />
             </Form.Item>
             <Form.Item name={['device', 'imei']} label="IMEI Number">
@@ -89,7 +102,19 @@ const ServiceAdd = ({ theme }) => {
             <Form.Item name={['device', 'receivedBy']} label="Received By">
               <Input />
             </Form.Item>
-            <Form.Item name={['device', 'receivedDate']} label="Received Date">
+            <Form.Item
+              name={['device', 'receivedDate']}
+              label="Received Date"
+              rules={[
+                { required: true, message: 'Please select received date' },
+                {
+                  validator: (_, value) =>
+                    value && dayjs.isDayjs(value) && value.isValid()
+                      ? Promise.resolve()
+                      : Promise.reject('Invalid date'),
+                },
+              ]}
+            >
               <DatePicker format="YYYY-MM-DD" />
             </Form.Item>
           </Col>
@@ -97,14 +122,14 @@ const ServiceAdd = ({ theme }) => {
         <h2>Problem Details</h2>
         <Row gutter={16}>
           <Col span={12}>
-            <Form.Item name={['problem', 'complaintType']} label="Complaint Type">
+            <Form.Item name={['problem', 'complaintType']} label="Complaint Type" rules={[{ required: true, message: 'Please select complaint type' }]}>
               <Select>
                 <Option value="hardware">Hardware</Option>
                 <Option value="software">Software</Option>
                 <Option value="other">Other</Option>
               </Select>
             </Form.Item>
-            <Form.Item name={['problem', 'description']} label="Problem Description">
+            <Form.Item name={['problem', 'description']} label="Problem Description" rules={[{ required: true, message: 'Please enter problem description' }]}>
               <TextArea />
             </Form.Item>
           </Col>
@@ -118,7 +143,7 @@ const ServiceAdd = ({ theme }) => {
           </Col>
         </Row>
         <Button type="primary" htmlType="submit">{isEdit ? 'Update' : 'Save'}</Button>
-        <Button onClick={() => navigate('/service')}>Back</Button>
+        <Button onClick={() => navigate('/service')} style={{ marginLeft: 8 }}>Back</Button>
       </Form>
     </div>
   );
