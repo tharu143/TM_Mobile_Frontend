@@ -272,11 +272,11 @@ const PointOfSale = ({ theme, setTheme }) => {
       try {
         setLoading(true);
         const [productsRes, mobilesRes, accessoriesRes, settingsRes, printRes] = await Promise.all([
-          axios.get("http://localhost:5000/api/products"),
-          axios.get("http://localhost:5000/api/mobiles"),
-          axios.get("http://localhost:5000/api/accessories"),
-          axios.get("http://localhost:5000/api/settings"),
-          axios.get("http://localhost:5000/api/print"),
+          axios.get("http://https://tm-mobile-backend.onrender.comapi/products"),
+          axios.get("http://https://tm-mobile-backend.onrender.comapi/mobiles"),
+          axios.get("http://https://tm-mobile-backend.onrender.comapi/accessories"),
+          axios.get("http://https://tm-mobile-backend.onrender.comapi/settings"),
+          axios.get("http://https://tm-mobile-backend.onrender.comapi/print"),
         ]);
         setProducts(productsRes.data);
         setMobiles(mobilesRes.data);
@@ -307,7 +307,7 @@ const PointOfSale = ({ theme, setTheme }) => {
     const fetchCustomerSuggestions = async () => {
       if (customerName.trim() || customerPhone.trim()) {
         try {
-          const response = await axios.get("http://localhost:5000/api/customers/search", {
+          const response = await axios.get("http://https://tm-mobile-backend.onrender.comapi/customers/search", {
             params: { query: customerName || customerPhone },
           });
           setCustomerSuggestions(response.data);
@@ -423,7 +423,7 @@ const PointOfSale = ({ theme, setTheme }) => {
       gstPercentage: enableGst ? gstPercentage : 0,
     };
     try {
-      await axios.post("http://localhost:5000/api/sales", saleData);
+      await axios.post("http://https://tm-mobile-backend.onrender.comapi/sales", saleData);
       setProducts((prevProducts) =>
         prevProducts.map((product) => {
           const cartItem = cart.find((item) => item.id === product._id);
