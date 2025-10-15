@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
-import apiClient, { API_BASE_URL } from "../config/api";
 import { Search, Plus, Minus, Trash2, CreditCard, Banknote, Smartphone, ShoppingCart, Sun, Moon, Leaf, Grid } from "lucide-react";
 // Inline SVG Icons
 const SearchIcon = ({ style }) => (
@@ -273,11 +272,11 @@ const PointOfSale = ({ theme, setTheme }) => {
       try {
         setLoading(true);
         const [productsRes, mobilesRes, accessoriesRes, settingsRes, printRes] = await Promise.all([
-          apiClient.get("/api/products"),
-          apiClient.get("/api/mobiles"),
-          apiClient.get("/api/accessories"),
-          apiClient.get("/api/settings"),
-          apiClient.get("/api/print"),
+          axios.get("http://localhost:5000/api/products"),
+          axios.get("http://localhost:5000/api/mobiles"),
+          axios.get("http://localhost:5000/api/accessories"),
+          axios.get("http://localhost:5000/api/settings"),
+          axios.get("http://localhost:5000/api/print"),
         ]);
         setProducts(productsRes.data);
         setMobiles(mobilesRes.data);
@@ -308,7 +307,7 @@ const PointOfSale = ({ theme, setTheme }) => {
     const fetchCustomerSuggestions = async () => {
       if (customerName.trim() || customerPhone.trim()) {
         try {
-          const response = await apiClient.get("/api/customers/search", {
+          const response = await axios.get("http://localhost:5000/api/customers/search", {
             params: { query: customerName || customerPhone },
           });
           setCustomerSuggestions(response.data);
@@ -369,7 +368,7 @@ const PointOfSale = ({ theme, setTheme }) => {
     }
   };
   const removeFromCart = (id) => {
-    setCart(cart.filter((item) => item.id === id));
+    setCart(cart.filter((item) => item.id !== id));
   };
   const selectCustomer = (customer) => {
     setCustomerName(customer.name);
@@ -424,7 +423,7 @@ const PointOfSale = ({ theme, setTheme }) => {
       gstPercentage: enableGst ? gstPercentage : 0,
     };
     try {
-      await apiClient.post("/api/sales", saleData);
+      await axios.post("http://localhost:5000/api/sales", saleData);
       setProducts((prevProducts) =>
         prevProducts.map((product) => {
           const cartItem = cart.find((item) => item.id === product._id);
@@ -793,7 +792,7 @@ const PointOfSale = ({ theme, setTheme }) => {
                     }}>
                       {product.image ? (
                         <img
-                          src={`${API_BASE_URL}${product.image}`}
+                          src={`http://localhost:5000${product.image}`}
                           alt={product.name}
                           style={{ maxHeight: "100%", maxWidth: "100%", objectFit: "contain" }}
                         />
@@ -975,7 +974,7 @@ const PointOfSale = ({ theme, setTheme }) => {
                   >
                     {item.image ? (
                       <img
-                        src={`${API_BASE_URL}${item.image}`}
+                        src={`http://localhost:5000${item.image}`}
                         alt={item.name}
                         style={{ maxHeight: "100%", maxWidth: "100%", objectFit: "contain" }}
                       />
@@ -1279,81 +1278,81 @@ const PointOfSale = ({ theme, setTheme }) => {
                   marginBottom: "10px",
                 }}
               >
-                <h1 style={{ fontSize: "16px", margin: "5px 0", color: styles.textColor }}>${shopDetails.shopName}</h1>
-                <p style={{ color: styles.textColor }}>${shopDetails.address}</p>
-                <p style={{ color: styles.textColor }}>Phone: ${phoneNumber}</p>
+                <h1 style={{ fontSize: "16px", margin: "5px 0", color: styles.textColor }}>{shopDetails.shopName}</h1>
+                <p style={{ color: styles.textColor }}>{shopDetails.address}</p>
+                <p style={{ color: styles.textColor }}>Phone: {phoneNumber}</p>
                 <div style={{ display: "flex", justifyContent: "space-between" }}>
-                  <p style={{ color: styles.textColor }}>${enableGstinPrint ? `GSTIN: ${shopDetails.gstin}` : ''}</p>
-                  <p style={{ color: styles.textColor }}>${enablePanPrint ? `PAN Number: ${panNumber}` : ''}</p>
+                  <p style={{ color: styles.textColor }}>{enableGstinPrint ? `GSTIN: ${shopDetails.gstin}` : ''}</p>
+                  <p style={{ color: styles.textColor }}>{enablePanPrint ? `PAN Number: ${panNumber}` : ''}</p>
                 </div>
-                <p style={{ color: styles.textColor }}>Invoice: ${invoiceData.invoiceId}</p>
-                <p style={{ color: styles.textColor }}>Date: ${new Date(invoiceData.timestamp).toLocaleString()}</p>
+                <p style={{ color: styles.textColor }}>Invoice: {invoiceData.invoiceId}</p>
+                <p style={{ color: styles.textColor }}>Date: {new Date(invoiceData.timestamp).toLocaleString()}</p>
               </div>
               <div style={{ marginBottom: "10px" }}>
                 <p style={{ color: styles.textColor }}>
-                  <strong>Customer:</strong> ${invoiceData.customer.name}
+                  <strong>Customer:</strong> {invoiceData.customer.name}
                 </p>
                 <p style={{ color: styles.textColor }}>
-                  <strong>Phone:</strong> ${invoiceData.customer.phone}
+                  <strong>Phone:</strong> {invoiceData.customer.phone}
                 </p>
               </div>
               <div style={{ marginBottom: "10px" }}>
                 <table style={{ width: "100%", borderCollapse: "collapse" }}>
-                  <tr>
-                    <th style={{ border: `1px solid ${styles.border}`, padding: "5px", textAlign: "left", color: styles.textColor }}>Item</th>
-                    <th style={{ border: `1px solid ${styles.border}`, padding: "5px", textAlign: "left", color: styles.textColor }}>Qty</th>
-                    <th style={{ border: `1px solid ${styles.border}`, padding: "5px", textAlign: "left", color: styles.textColor }}>Price</th>
-                    <th style={{ border: `1px solid ${styles.border}`, padding: "5px", textAlign: "left", color: styles.textColor }}>Tax Rate</th>
-                    <th style={{ border: `1px solid ${styles.border}`, padding: "5px", textAlign: "left", color: styles.textColor }}>Total</th>
-                  </tr>
-                  ${invoiceData.items
-                    .map(
-                      (item) => `
-                  <tr>
-                    <td style={{ border: \`1px solid \${styles.border}\`, padding: "5px", color: styles.textColor }}>${item.name}</td>
-                    <td style={{ border: \`1px solid \${styles.border}\`, padding: "5px", color: styles.textColor }}>${item.quantity}</td>
-                    <td style={{ border: \`1px solid \${styles.border}\`, padding: "5px", color: styles.textColor }}>
-                      ₹${item.price.toLocaleString()}
-                    </td>
-                    <td style={{ border: \`1px solid \${styles.border}\`, padding: "5px", color: styles.textColor }}>
-                      ${invoiceData.gstPercentage}%
-                    </td>
-                    <td style={{ border: \`1px solid \${styles.border}\`, padding: "5px", color: styles.textColor }}>
-                      ₹${(item.price * item.quantity + item.price * item.quantity * (invoiceData.gstPercentage / 100)).toLocaleString()}
-                    </td>
-                  </tr>
-                `
-                  )
-                    .join("")}
+                  <thead>
+                    <tr>
+                      <th style={{ border: `1px solid ${styles.border}`, padding: "5px", textAlign: "left", color: styles.textColor }}>Item</th>
+                      <th style={{ border: `1px solid ${styles.border}`, padding: "5px", textAlign: "left", color: styles.textColor }}>Qty</th>
+                      <th style={{ border: `1px solid ${styles.border}`, padding: "5px", textAlign: "left", color: styles.textColor }}>Price</th>
+                      <th style={{ border: `1px solid ${styles.border}`, padding: "5px", textAlign: "left", color: styles.textColor }}>Tax Rate</th>
+                      <th style={{ border: `1px solid ${styles.border}`, padding: "5px", textAlign: "left", color: styles.textColor }}>Total</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {invoiceData.items.map((item, index) => (
+                      <tr key={index}>
+                        <td style={{ border: `1px solid ${styles.border}`, padding: "5px", color: styles.textColor }}>{item.name}</td>
+                        <td style={{ border: `1px solid ${styles.border}`, padding: "5px", color: styles.textColor }}>{item.quantity}</td>
+                        <td style={{ border: `1px solid ${styles.border}`, padding: "5px", color: styles.textColor }}>
+                          ₹{item.price.toLocaleString()}
+                        </td>
+                        <td style={{ border: `1px solid ${styles.border}`, padding: "5px", color: styles.textColor }}>
+                          {invoiceData.gstPercentage}%
+                        </td>
+                        <td style={{ border: `1px solid ${styles.border}`, padding: "5px", color: styles.textColor }}>
+                          ₹{(item.price * item.quantity + item.price * item.quantity * (invoiceData.gstPercentage / 100)).toLocaleString()}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
                 </table>
               </div>
               <div style={{ marginBottom: "10px" }}>
                 <div style={{ display: "flex", justifyContent: "space-between", margin: "5px 0", color: styles.textColor }}>
                   <span>Subtotal:</span>
-                  <span>₹${invoiceData.subtotal.toLocaleString()}</span>
+                  <span>₹{invoiceData.subtotal.toLocaleString()}</span>
                 </div>
-                ${invoiceData.tax > 0 ? `
+                {invoiceData.tax > 0 && (
                   <div style={{ display: "flex", justifyContent: "space-between", margin: "5px 0", color: styles.textColor }}>
-                    <span>GST (${invoiceData.gstPercentage}%):</span>
-                    <span>₹${invoiceData.tax.toLocaleString()}</span>
+                    <span>GST ({invoiceData.gstPercentage}%):</span>
+                    <span>₹{invoiceData.tax.toLocaleString()}</span>
                   </div>
-                ` : ""}
+                )}
                 <div style={{ display: "flex", justifyContent: "space-between", margin: "5px 0", fontWeight: "bold", color: styles.textColor }}>
                   <span>Calculated Total:</span>
-                  <span>₹${invoiceData.total.toLocaleString()}</span>
+                  <span>₹{invoiceData.total.toLocaleString()}</span>
                 </div>
-                ${invoiceData.manualTotal ? `
+                {invoiceData.manualTotal && (
                   <div style={{ display: "flex", justifyContent: "space-between", margin: "5px 0", fontWeight: "bold", color: styles.textColor }}>
                     <span>Manual Total:</span>
-                    <span>₹${invoiceData.manualTotal.toLocaleString()}</span>
+                    <span>₹{invoiceData.manualTotal.toLocaleString()}</span>
                   </div>
-                ` : ""}
+                )}
                 <div style={{ display: "flex", justifyContent: "space-between", margin: "5px 0", color: styles.textColor }}>
                   <span>Payment Method:</span>
-                  <span>${invoiceData.paymentMethod.charAt(0).toUpperCase() + invoiceData.paymentMethod.slice(1)}</span>
+                  <span>{invoiceData.paymentMethod.charAt(0).toUpperCase() + invoiceData.paymentMethod.slice(1)}</span>
                 </div>
               </div>
-              ${enableTermsPrint ? `
+              {enableTermsPrint && (
                 <div style={{ marginBottom: "1rem" }}>
                   <strong>Terms & Conditions</strong>
                   <ol>
@@ -1363,7 +1362,7 @@ const PointOfSale = ({ theme, setTheme }) => {
                     <li>Pay due amount within 15 days</li>
                   </ol>
                 </div>
-              ` : ''}
+              )}
               <div
                 style={{
                   textAlign: "center",
