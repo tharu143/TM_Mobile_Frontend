@@ -44,6 +44,9 @@ const PointOfSale = ({ theme, setTheme }) => {
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const [warning, setWarning] = useState("");
   const [manualTotal, setManualTotal] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
+
   const themeStyles = {
     light: {
       bgColor: "hsl(240 20% 98%)",
@@ -263,7 +266,15 @@ const PointOfSale = ({ theme, setTheme }) => {
   };
   useEffect(() => {
     const handleResize = () => {
-      setIsMobile(window.innerWidth < 768);
+      const width = window.innerWidth;
+      setIsMobile(width < 768);
+      if (width < 768) { // Mobile
+        setItemsPerPage(6);
+      } else if (width < 1280) { // Tablet/Small Desktop
+        setItemsPerPage(8);
+      } else { // Large Desktop
+        setItemsPerPage(10);
+      }
     };
     window.addEventListener("resize", handleResize);
     handleResize(); // Call on initial mount
@@ -323,6 +334,11 @@ const PointOfSale = ({ theme, setTheme }) => {
     };
     fetchCustomerSuggestions();
   }, [customerName, customerPhone]);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, selectedCategory, selectedModel]);
+
   const showWarning = (msg) => {
     setWarning(msg);
     setTimeout(() => setWarning(""), 5000);
@@ -638,6 +654,18 @@ const PointOfSale = ({ theme, setTheme }) => {
     { id: "sunset", label: "Sunset", icon: Grid },
   ];
   const selectedTheme = themeOptions.find((t) => t.id === theme) || themeOptions[0];
+
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentItems = filteredProducts.slice(indexOfFirstItem, indexOfLastItem);
+  const totalPages = Math.ceil(filteredProducts.length / itemsPerPage);
+
+  const handlePageChange = (newPage) => {
+    if (newPage > 0 && newPage <= totalPages) {
+      setCurrentPage(newPage);
+    }
+  };
+
   if (loading) {
     return <div style={{ textAlign: "center", padding: "2rem", color: styles.textColor }}>Loading products...</div>;
   }
@@ -768,8 +796,8 @@ const PointOfSale = ({ theme, setTheme }) => {
               </button>
             )}
           </div>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(11rem, 1fr))", gap: "1rem" }}>
-            {filteredProducts.map((product) => (
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(11rem, 1fr))", gap: "1rem", minHeight: '400px' }}>
+            {currentItems.map((product) => (
               <div
                 key={product._id}
                 style={{
@@ -826,6 +854,41 @@ const PointOfSale = ({ theme, setTheme }) => {
               </div>
             ))}
           </div>
+          {totalPages > 1 && (
+            <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', marginTop: '2rem', gap: '0.5rem' }}>
+              <button
+                onClick={() => handlePageChange(currentPage - 1)}
+                disabled={currentPage === 1}
+                style={{
+                  padding: '0.5rem 1rem',
+                  backgroundColor: currentPage === 1 ? styles.disabledBg : styles.buttonOutlineBg,
+                  color: styles.buttonOutlineText,
+                  border: `1px solid ${styles.border}`,
+                  borderRadius: styles.radius,
+                  cursor: currentPage === 1 ? 'not-allowed' : 'pointer'
+                }}
+              >
+                Previous
+              </button>
+              <span style={{ color: styles.textColor, fontWeight: '500' }}>
+                Page {currentPage} of {totalPages}
+              </span>
+              <button
+                onClick={() => handlePageChange(currentPage + 1)}
+                disabled={currentPage === totalPages}
+                style={{
+                  padding: '0.5rem 1rem',
+                  backgroundColor: currentPage === totalPages ? styles.disabledBg : styles.buttonOutlineBg,
+                  color: styles.buttonOutlineText,
+                  border: `1px solid ${styles.border}`,
+                  borderRadius: styles.radius,
+                  cursor: currentPage === totalPages ? 'not-allowed' : 'pointer'
+                }}
+              >
+                Next
+              </button>
+            </div>
+          )}
         </div>
       </div>
       <div style={{
