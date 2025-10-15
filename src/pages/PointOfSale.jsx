@@ -266,6 +266,7 @@ const PointOfSale = ({ theme, setTheme }) => {
       setIsMobile(window.innerWidth < 768);
     };
     window.addEventListener("resize", handleResize);
+    handleResize(); // Call on initial mount
     return () => window.removeEventListener("resize", handleResize);
   }, []);
   useEffect(() => {
@@ -645,11 +646,11 @@ const PointOfSale = ({ theme, setTheme }) => {
   }
   return (
     <div style={{ backgroundColor: styles.bgColor, color: styles.foreground, minHeight: "100vh", display: "flex", flexDirection: isMobile ? "column" : "row", overflowX: "hidden" }}>
-      <div style={{ flexGrow: 1, padding: "2rem", overflow: "auto" }}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem" }}>
+      <div style={{ flexGrow: 1, padding: isMobile ? "1rem" : "2rem", overflowY: "auto" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem", flexWrap: 'wrap', gap: '1rem' }}>
           <div>
-            <h1 style={{ fontSize: "1.875rem", fontWeight: "700", color: styles.textColor }}>Point of Sale</h1>
-            <p style={{ fontSize: "1rem", color: styles.secondaryTextColor }}>
+            <h1 style={{ fontSize: isMobile ? "1.5rem" : "1.875rem", fontWeight: "700", color: styles.textColor }}>Point of Sale</h1>
+            <p style={{ fontSize: isMobile ? "0.875rem" : "1rem", color: styles.secondaryTextColor }}>
               Select products to add to cart | GST: {enableGst ? `${gstPercentage}%` : "Not Applied"}
             </p>
           </div>
@@ -693,6 +694,7 @@ const PointOfSale = ({ theme, setTheme }) => {
                       alignItems: "center",
                       gap: "0.5rem",
                       padding: "0.5rem",
+                      width: '100%',
                       backgroundColor: theme === option.id ? styles.primary : "transparent",
                       color: theme === option.id ? styles.primaryForeground : styles.foreground,
                       border: "none",
@@ -766,7 +768,7 @@ const PointOfSale = ({ theme, setTheme }) => {
               </button>
             )}
           </div>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(12rem, 1fr))", gap: "1rem" }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(11rem, 1fr))", gap: "1rem" }}>
             {filteredProducts.map((product) => (
               <div
                 key={product._id}
@@ -801,20 +803,21 @@ const PointOfSale = ({ theme, setTheme }) => {
                         <Smartphone size={48} style={{ color: styles.mutedForeground }} />
                       )}
                     </div>
-                    <h3 style={{ fontSize: "1rem", fontWeight: "600", marginBottom: "0.5rem", color: styles.textColor }}>{product.name}</h3>
+                    <h3 style={{ fontSize: "1rem", fontWeight: "600", marginBottom: "0.5rem", color: styles.textColor, minHeight: '2.5rem' }}>{product.name}</h3>
                     <p style={{ color: styles.primary, fontWeight: "600", marginBottom: "0.5rem" }}>₹{product.price.toLocaleString()}</p>
-                    <div style={{ display: "flex", justifyContent: "space-between" }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: 'center', flexWrap:'wrap', gap: '0.5rem' }}>
                       <span
                         style={{
                           padding: "0.25rem 0.5rem",
                           borderRadius: styles.radius,
+                          fontSize: '0.75rem',
                           backgroundColor: product.stock > 10 ? styles.statusSuccess : product.stock > 0 ? styles.statusWarning : styles.statusDestructive,
                           color: product.stock > 10 ? styles.successForeground : product.stock > 0 ? styles.warningForeground : styles.destructiveForeground
                         }}
                       >
                         Stock: {product.stock}
                       </span>
-                      <span style={{ padding: "0.25rem 0.5rem", borderRadius: styles.radius, backgroundColor: styles.secondary, color: styles.secondaryForeground }}>
+                      <span style={{ padding: "0.25rem 0.5rem", borderRadius: styles.radius, fontSize: '0.75rem', backgroundColor: styles.secondary, color: styles.secondaryForeground }}>
                         {product.category}
                       </span>
                     </div>
@@ -825,7 +828,17 @@ const PointOfSale = ({ theme, setTheme }) => {
           </div>
         </div>
       </div>
-      <div style={{ width: isMobile ? "100%" : "25rem", minWidth: isMobile ? "auto" : "24rem", backgroundColor: styles.cardBg, borderLeft: isMobile ? "none" : `1px solid ${styles.border}`, borderTop: isMobile ? `1px solid ${styles.border}` : "none" }}>
+      <div style={{
+        width: isMobile ? "100%" : "30%",
+        maxWidth: isMobile ? '100%' : '420px',
+        minWidth: isMobile ? '100%' : '350px',
+        backgroundColor: styles.cardBg,
+        borderLeft: isMobile ? "none" : `1px solid ${styles.border}`,
+        borderTop: isMobile ? `1px solid ${styles.border}` : "none",
+        display: 'flex',
+        flexDirection: 'column',
+        maxHeight: isMobile ? 'auto' : '100vh'
+      }}>
         <div style={{ padding: "1rem", borderBottom: `1px solid ${styles.border}` }}>
           <h2 style={{ fontSize: "1.25rem", fontWeight: "600", display: "flex", alignItems: "center", gap: "0.5rem", color: styles.textColor }}>
             <ShoppingCart size={20} />
@@ -966,6 +979,7 @@ const PointOfSale = ({ theme, setTheme }) => {
                     style={{
                       width: "3rem",
                       height: "3rem",
+                      flexShrink: 0,
                       display: "flex",
                       alignItems: "center",
                       justifyContent: "center",
@@ -983,14 +997,14 @@ const PointOfSale = ({ theme, setTheme }) => {
                       <Smartphone size={24} style={{ color: styles.mutedForeground }} />
                     )}
                   </div>
-                  <div style={{ flexGrow: 1 }}>
-                    <h4 style={{ fontSize: "1rem", marginBottom: "0.25rem", color: styles.textColor }}>{item.name}</h4>
+                  <div style={{ flexGrow: 1, minWidth: 0 }}>
+                    <h4 style={{ fontSize: "0.875rem", marginBottom: "0.25rem", color: styles.textColor, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{item.name}</h4>
                     <p style={{ fontSize: "0.875rem", color: styles.secondaryTextColor }}>₹{item.price.toLocaleString()}</p>
                   </div>
-                  <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: "0.25rem" }}>
                     <button
                       style={{
-                        padding: "0.25rem 0.5rem",
+                        padding: "0.25rem",
                         backgroundColor: styles.buttonOutlineBg,
                         color: styles.buttonOutlineText,
                         border: `1px solid ${styles.border}`,
@@ -1001,10 +1015,10 @@ const PointOfSale = ({ theme, setTheme }) => {
                     >
                       <Minus size={12} />
                     </button>
-                    <span style={{ padding: "0 0.5rem" }}>{item.quantity}</span>
+                    <span style={{ padding: "0 0.25rem", fontSize: '0.875rem' }}>{item.quantity}</span>
                     <button
                       style={{
-                        padding: "0.25rem 0.5rem",
+                        padding: "0.25rem",
                         backgroundColor: styles.buttonOutlineBg,
                         color: styles.buttonOutlineText,
                         border: `1px solid ${styles.border}`,
@@ -1017,7 +1031,7 @@ const PointOfSale = ({ theme, setTheme }) => {
                     </button>
                     <button
                       style={{
-                        padding: "0.25rem 0.5rem",
+                        padding: "0.25rem",
                         backgroundColor: styles.destructive,
                         color: styles.destructiveForeground,
                         border: "none",
@@ -1035,7 +1049,7 @@ const PointOfSale = ({ theme, setTheme }) => {
           )}
         </div>
         {cart.length > 0 && (
-          <div style={{ padding: "1rem", borderTop: `1px solid ${styles.border}` }}>
+          <div style={{ padding: "1rem", borderTop: `1px solid ${styles.border}`, marginTop: 'auto' }}>
             <div style={{ marginBottom: "1rem" }}>
               <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "0.5rem" }}>
                 <span style={{ color: styles.textColor }}>Subtotal:</span>
@@ -1051,7 +1065,7 @@ const PointOfSale = ({ theme, setTheme }) => {
                 <span style={{ color: styles.textColor }}>Total:</span>
                 <span style={{ color: styles.textColor }}>₹{getTotal().toLocaleString()}</span>
               </div>
-              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "0.5rem" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: 'center', marginTop: '0.5rem' }}>
                 <span style={{ color: styles.textColor }}>Manual Total:</span>
                 <input
                   type="number"
@@ -1114,7 +1128,8 @@ const PointOfSale = ({ theme, setTheme }) => {
             <button
               style={{
                 width: "100%",
-                padding: "0.5rem",
+                padding: "0.75rem",
+                fontSize: '1rem',
                 backgroundColor: styles.primary,
                 color: styles.primaryForeground,
                 border: "none",
@@ -1231,7 +1246,8 @@ const PointOfSale = ({ theme, setTheme }) => {
             display: "flex",
             justifyContent: "center",
             alignItems: "center",
-            zIndex: 1000
+            zIndex: 1000,
+            padding: '1rem'
           }}
         >
           <div
@@ -1239,9 +1255,9 @@ const PointOfSale = ({ theme, setTheme }) => {
               backgroundColor: styles.popupBg,
               borderRadius: styles.radius,
               padding: "1rem",
-              width: isMobile ? "90%" : "500px",
-              height: "auto",
-              overflowY: "visible",
+              width: isMobile ? "100%" : "500px",
+              maxHeight: '90vh',
+              overflowY: "auto",
               boxShadow: styles.shadowElegant
             }}
           >
@@ -1282,7 +1298,7 @@ const PointOfSale = ({ theme, setTheme }) => {
                 <h1 style={{ fontSize: "16px", margin: "5px 0", color: styles.textColor }}>{shopDetails.shopName}</h1>
                 <p style={{ color: styles.textColor }}>{shopDetails.address}</p>
                 <p style={{ color: styles.textColor }}>Phone: {phoneNumber}</p>
-                <div style={{ display: "flex", justifyContent: "space-between" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", flexWrap: 'wrap' }}>
                   <p style={{ color: styles.textColor }}>{enableGstinPrint ? `GSTIN: ${shopDetails.gstin}` : ''}</p>
                   <p style={{ color: styles.textColor }}>{enablePanPrint ? `PAN Number: ${panNumber}` : ''}</p>
                 </div>
@@ -1297,7 +1313,7 @@ const PointOfSale = ({ theme, setTheme }) => {
                   <strong>Phone:</strong> {invoiceData.customer.phone}
                 </p>
               </div>
-              <div style={{ marginBottom: "10px" }}>
+              <div style={{ marginBottom: "10px", overflowX: 'auto' }}>
                 <table style={{ width: "100%", borderCollapse: "collapse" }}>
                   <thead>
                     <tr>
