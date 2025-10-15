@@ -674,7 +674,7 @@ const PointOfSale = ({ theme, setTheme }) => {
   }
   return (
     <div style={{ backgroundColor: styles.bgColor, color: styles.foreground, minHeight: "100vh", display: "flex", flexDirection: isMobile ? "column" : "row", overflowX: "hidden" }}>
-      <div style={{ flexGrow: 1, padding: isMobile ? "1rem" : "2rem", overflowY: "auto" }}>
+      <div style={{ flexGrow: 1, padding: isMobile ? "1rem" : "2rem" }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem", flexWrap: 'wrap', gap: '1rem' }}>
           <div>
             <h1 style={{ fontSize: isMobile ? "1.5rem" : "1.875rem", fontWeight: "700", color: styles.textColor }}>Point of Sale</h1>
@@ -900,7 +900,6 @@ const PointOfSale = ({ theme, setTheme }) => {
         borderTop: isMobile ? `1px solid ${styles.border}` : "none",
         display: 'flex',
         flexDirection: 'column',
-        maxHeight: isMobile ? 'auto' : '100vh'
       }}>
         <div style={{ padding: "1rem", borderBottom: `1px solid ${styles.border}` }}>
           <h2 style={{ fontSize: "1.25rem", fontWeight: "600", display: "flex", alignItems: "center", gap: "0.5rem", color: styles.textColor }}>
@@ -1016,7 +1015,7 @@ const PointOfSale = ({ theme, setTheme }) => {
             </p>
           )}
         </div>
-        <div style={{ flexGrow: 1, overflow: "auto", padding: "1rem" }}>
+        <div style={{ flexGrow: 1, padding: "1rem" }}>
           {cart.length === 0 ? (
             <div style={{ textAlign: "center", padding: "2rem", color: styles.mutedForeground }}>
               <ShoppingCart size={20} />
