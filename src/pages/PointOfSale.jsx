@@ -272,11 +272,11 @@ const PointOfSale = ({ theme, setTheme }) => {
       try {
         setLoading(true);
         const [productsRes, mobilesRes, accessoriesRes, settingsRes, printRes] = await Promise.all([
-          axios.get("http://https://tm-mobile-backend.onrender.com/api/products"),
-          axios.get("http://https://tm-mobile-backend.onrender.com/api/mobiles"),
-          axios.get("http://https://tm-mobile-backend.onrender.com/api/accessories"),
-          axios.get("http://https://tm-mobile-backend.onrender.com/api/settings"),
-          axios.get("http://https://tm-mobile-backend.onrender.com/api/print"),
+          axios.get("https://tm-mobile-backend.onrender.com/api/products"),
+          axios.get("https://tm-mobile-backend.onrender.com/api/mobiles"),
+          axios.get("https://tm-mobile-backend.onrender.com/api/accessories"),
+          axios.get("https://tm-mobile-backend.onrender.com/api/settings"),
+          axios.get("https://tm-mobile-backend.onrender.com/api/print"),
         ]);
         setProducts(productsRes.data);
         setMobiles(mobilesRes.data);
@@ -307,7 +307,7 @@ const PointOfSale = ({ theme, setTheme }) => {
     const fetchCustomerSuggestions = async () => {
       if (customerName.trim() || customerPhone.trim()) {
         try {
-          const response = await axios.get("http://https://tm-mobile-backend.onrender.com/api/customers/search", {
+          const response = await axios.get("https://tm-mobile-backend.onrender.com/api/customers/search", {
             params: { query: customerName || customerPhone },
           });
           setCustomerSuggestions(response.data);
@@ -423,7 +423,7 @@ const PointOfSale = ({ theme, setTheme }) => {
       gstPercentage: enableGst ? gstPercentage : 0,
     };
     try {
-      await axios.post("http://https://tm-mobile-backend.onrender.com/api/sales", saleData);
+      await axios.post("https://tm-mobile-backend.onrender.com/api/sales", saleData);
       setProducts((prevProducts) =>
         prevProducts.map((product) => {
           const cartItem = cart.find((item) => item.id === product._id);
@@ -792,7 +792,7 @@ const PointOfSale = ({ theme, setTheme }) => {
                     }}>
                       {product.image ? (
                         <img
-                          src={`http://localhost:5000${product.image}`}
+                          src={`https://tm-mobile-backend.onrender.com${product.image}`}
                           alt={product.name}
                           style={{ maxHeight: "100%", maxWidth: "100%", objectFit: "contain" }}
                         />
@@ -974,7 +974,7 @@ const PointOfSale = ({ theme, setTheme }) => {
                   >
                     {item.image ? (
                       <img
-                        src={`http://localhost:5000${item.image}`}
+                        src={`https://tm-mobile-backend.onrender.com${item.image}`}
                         alt={item.name}
                         style={{ maxHeight: "100%", maxWidth: "100%", objectFit: "contain" }}
                       />
